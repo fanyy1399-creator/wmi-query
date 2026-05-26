@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WMI查询工具 - 极速齿轮社团</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2a32 0%, #0e1a1f 100%);
+            font-family: 'Segoe UI', 'Poppins', 'Noto Sans CJK SC', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(2px);
+            border-radius: 48px;
+            padding: 28px 24px 36px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,200,100,0.15);
+            padding: 6px 18px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            color: #ffcf8a;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,200,100,0.3);
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            color: #fff6e5;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .sub {
+            color: #aac7d4;
+            font-size: 0.9rem;
+        }
+
+        .input-area {
+            background: #101d1a;
+            border-radius: 40px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .input-label span {
+            color: #ffcf8a;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: #8eaeaa;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .wmi-input {
+            flex: 2;
+            background: #1e2f2b;
+            border: 1px solid #3a5a52;
+            border-radius: 60px;
+            padding: 14px 20px;
+            font-size: 1.3rem;
+            font-family: monospace;
+            letter-spacing: 2px;
+            color: #ffecb3;
+            font-weight: bold;
+            text-transform: uppercase;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .wmi-input:focus {
+            border-color: #ffb347;
+            box-shadow: 0 0 0 3px rgba(255,180,70,0.3);
+        }
+
+        .query-btn {
+            background: linear-gradient(135deg, #ff8c42, #ff6b2b);
+            border: none;
+            border-radius: 60px;
+            padding: 0 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.08s linear;
+            box-shadow: 0 5px 0 #a33f0e;
+            font-family: inherit;
+        }
+
+        .query-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #a33f0e;
+        }
+
+        .result-area {
+            background: #0f1917;
+            border-radius: 36px;
+            padding: 20px;
+            margin-bottom: 28px;
+            border-left: 6px solid #ffb347;
+        }
+
+        .result-title {
+            font-size: 0.85rem;
+            color: #ffcf8a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px dashed #2a423c;
+            padding-bottom: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #cddde0;
+            min-width: 100px;
+        }
+
+        .info-value {
+            color: #ffdd99;
+            font-size: 1.1rem;
+            font-weight: bold;
+            word-break: break-word;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .not-found {
+            color: #ffaa88;
+            background: rgba(255,80,40,0.2);
+            padding: 16px;
+            border-radius: 28px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: #1a2622;
+            border-radius: 24px;
+            padding: 18px;
+            font-size: 0.8rem;
+            color: #bdd0c0;
+        }
+
+        .info-box h4 {
+            color: #ffcf8a;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-box p {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .info-box .country-badge {
+            display: inline-block;
+            background: #2c3e35;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-weight: bold;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            color: #ffdd99;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5a7a72;
+        }
+
+        @media (max-width: 560px) {
+            .container { padding: 20px 16px; }
+            .info-value { font-size: 0.9rem; }
+            .query-btn { padding: 0 18px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="badge">
+            <span>⚙️ 极速齿轮社团</span>
+            <span>🔧 技术研究所</span>
+        </div>
+        <h1>🔍 WMI 查询工具</h1>
+        <div class="sub">输入VIN前三位 · 识别生产国家与制造商</div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-label">
+            <span>📌 世界制造厂识别代码 (WMI)</span>
+            <div class="hint">✧ VIN 码的前三位字符 ✧</div>
+        </div>
+        <div class="input-wrapper">
+            <input type="text" id="wmiCode" class="wmi-input" placeholder="例: LSV 或 LFV 或 WBA" maxlength="3" autocomplete="off">
+            <button id="searchBtn" class="query-btn">🔍 查询</button>
+        </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+        <div class="result-title">
+            <span>🏁 查询结果</span>
+        </div>
+        <div id="resultContent" style="min-height: 100px;">
+            <div style="text-align:center; opacity:0.7; padding:20px 0;">等待查询...</div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h4>💡 WMI 小知识</h4>
+        <p>WMI（World Manufacturer Identifier）是 VIN 码的第 <strong>1~3 位</strong>，用于标识车辆的 <strong>生产国家/地区</strong> 和 <strong>制造商</strong>。</p>
+        <p>📍 <strong>首字母国家标识速查</strong>：<br>
+        <span class="country-badge">L</span> 中国 &nbsp; <span class="country-badge">W</span> 德国 &nbsp; <span class="country-badge">J</span> 日本 &nbsp; <span class="country-badge">1/4/5</span> 美国 &nbsp; <span class="country-badge">K</span> 韩国 &nbsp; <span class="country-badge">S</span> 英国 &nbsp; <span class="country-badge">V</span> 法国/西班牙 &nbsp; <span class="country-badge">Z</span> 意大利 &nbsp; <span class="country-badge">2</span> 加拿大 &nbsp; <span class="country-badge">3</span> 墨西哥 &nbsp; <span class="country-badge">6</span> 澳大利亚 &nbsp; <span class="country-badge">M</span> 印度/东南亚</p>
+        <p>📋 本工具涵盖众多全球主流汽车制造商（包括中国自主、合资、德、日、美、英、韩、法、意等品牌），数据持续更新。</p>
+    </div>
+    <div class="footer">⚙️ 极速齿轮 · 技术小工具 | 输入3位WMI代码即可查询</div>
+</div>
+
+<script>
+    // 生产国家映射
+    function getDetailedCountry(wmi) {
+        if (!wmi || wmi.length === 0) return '未知';
+        const firstChar = wmi.charAt(0).toUpperCase();
+        if (firstChar === 'L') return '🇨🇳 中国 (国产车)';
+        if (firstChar === 'H' && wmi.length >= 2) {
+            const secondChar = wmi.charAt(1).toUpperCase();
+            if ((secondChar >= 'A' && secondChar <= 'Z') || (secondChar >= '0' && secondChar <= '9')) {
+                return '🇨🇳 中国 (H号段国产车)';
+            }
+        }
+        const countryMap = {
+            '1': '🇺🇸 美国', '2': '🇨🇦 加拿大', '3': '🇲🇽 墨西哥', '4': '🇺🇸 美国', '5': '🇺🇸 美国',
+            '6': '🇦🇺 澳大利亚', '7': '🇳🇿 新西兰',
+            '8': '🇦🇷 阿根廷/🇨🇱 智利/🇻🇪 委内瑞拉', '9': '🇧🇷 巴西',
+            'A': '🇿🇦 南非', 'B': '🇿🇼 津巴布韦/其他非洲地区', 'C': '非洲', 'D': '非洲',
+            'J': '🇯🇵 日本', 'K': '🇰🇷 韩国', 'L': '🇨🇳 中国',
+            'M': '🇮🇳 印度/🇮🇩 印尼/🇲🇾 马来西亚',
+            'P': '🇵🇭 菲律宾', 'R': '🇹🇼 中国台湾',
+            'S': '🇬🇧 英国', 'T': '🇨🇭 瑞士/🇨🇿 捷克',
+            'U': '欧洲', 'V': '🇫🇷 法国/🇪🇸 西班牙',
+            'W': '🇩🇪 德国', 'X': '🇳🇱 荷兰/🇷🇺 俄罗斯',
+            'Y': '🇧🇪 比利时/🇫🇮 芬兰/🇸🇪 瑞典',
+            'Z': '🇮🇹 意大利'
+        };
+        return countryMap[firstChar] || '未知地区';
+    }
+
+    // 制造商数据库（完整版，包含 LKL 宇通客车）
+    const manufacturerDB = [
+        // 中国合资
+        { code: 'LSV', name: '上汽大众汽车有限公司 (Volkswagen)' },
+        { code: 'LFV', name: '一汽-大众汽车有限公司 (含奥迪)' },
+        { code: 'LSG', name: '上汽通用汽车有限公司 (别克/雪佛兰/凯迪拉克)' },
+        { code: 'LE4', name: '北京奔驰汽车有限公司' },
+        { code: 'LWB', name: '华晨宝马汽车有限公司' },
+        { code: 'LHG', name: '广汽本田汽车有限公司' },
+        { code: 'LTV', name: '天津一汽丰田汽车有限公司' },
+        { code: 'LFM', name: '一汽丰田 (天津/四川)' },
+        { code: 'LDC', name: '神龙汽车有限公司 (东风雪铁龙/东风标致)' },
+        { code: 'LVS', name: '长安福特汽车有限公司' },
+        { code: 'LEN', name: '北京吉普汽车有限公司' },
+        { code: 'LVG', name: '广汽丰田汽车有限公司' },
+        { code: 'LGB', name: '东风汽车有限公司 (东风日产/东风启辰)' },
+        { code: 'LPN', name: '东风本田汽车有限公司' },
+        { code: 'LNB', name: '北京现代汽车有限公司' },
+        { code: 'LBE', name: '北京现代汽车有限公司 (早期)' },
+        { code: 'LDY', name: '东风悦达起亚汽车有限公司' },
+        { code: 'LJN', name: '郑州日产汽车有限公司' },
+        { code: 'LZ5', name: '四川现代汽车有限公司' },
+        { code: 'LUD', name: '江铃汽车股份有限公司 (福特/江铃)' },
+        { code: 'LZW', name: '上汽通用五菱汽车股份有限公司' },
+        { code: 'L6T', name: '浙江吉利汽车有限公司 (吉利/领克/极氪)' },
+        { code: 'L6C', name: '吉利汽车 (新能源系列)' },
+        { code: 'L6V', name: '领克汽车 (Lynk & Co)' },
+        { code: 'L6L', name: '极氪汽车 (ZEEKR)' },
+        { code: 'LKY', name: '重庆长安铃木汽车有限公司' },
+        { code: 'LL6', name: '长安马自达汽车有限公司' },
+        { code: 'L5C', name: '东风英菲尼迪汽车有限公司' },
+        { code: 'L5Y', name: '东风雷诺汽车有限公司' },
+        { code: 'LVM', name: '奇瑞捷豹路虎汽车有限公司' },
+        { code: 'LVV', name: '奇瑞汽车股份有限公司' },
+        { code: 'LF0', name: '沃尔沃汽车 (大庆/成都工厂)' },
+        { code: 'LPS', name: 'Polestar 极星汽车 (中国生产)' },
+        { code: 'LRW', name: '特斯拉 (上海超级工厂)' },
+        // 中国自主
+        { code: 'LGX', name: '比亚迪汽车 (王朝系列/燃油车)' },
+        { code: 'LC0', name: '比亚迪汽车 (海洋系列/新能源)' },
+        { code: 'LCC', name: '比亚迪汽车 (商用车)' },
+        { code: 'LGW', name: '长城汽车股份有限公司 (哈弗/长城皮卡/Wey/坦克)' },
+        { code: 'LVV', name: '奇瑞汽车 (瑞虎/艾瑞泽等)' },
+        { code: 'LNN', name: '奇瑞新能源 (小蚂蚁/QQ冰淇淋)' },
+        { code: 'L5N', name: '长安汽车 (长安自主品牌)' },
+        { code: 'LS5', name: '长安汽车 (CS系列/逸动等)' },
+        { code: 'LSA', name: '长安汽车 (新能源深蓝系列)' },
+        { code: 'LH1', name: '长安汽车 (阿维塔)' },
+        { code: 'LHA', name: '广汽传祺汽车有限公司' },
+        { code: 'LHN', name: '广汽埃安新能源汽车有限公司' },
+        { code: 'LHB', name: '北汽福田汽车股份有限公司' },
+        { code: 'LVA', name: '北汽福田 (商用车)' },
+        { code: 'LVC', name: '北汽福田 (轻型客车)' },
+        { code: 'LNB', name: '北汽集团 (北京汽车/绅宝)' },
+        { code: 'LRE', name: '北京汽车制造厂 (BJ212等)' },
+        { code: 'LZ9', name: '华晨汽车/中华品牌' },
+        { code: 'LJ8', name: '上汽大通汽车有限公司 (MAXUS)' },
+        { code: 'LSF', name: '上汽红岩汽车有限公司' },
+        { code: 'LJ1', name: '蔚来汽车 (NIO)' },
+        { code: 'LJN', name: '蔚来汽车 (合肥工厂)' },
+        { code: 'LXA', name: '理想汽车 (Li Auto)' },
+        { code: 'HXM', name: '理想汽车 (北京工厂)' },
+        { code: 'L9N', name: '小鹏汽车 (XPENG 广州/肇庆工厂)' },
+        { code: 'NHQ', name: '小鹏汽车 (早期/武汉工厂)' },
+        { code: 'L6C', name: '零跑汽车 (LEAPMOTOR)' },
+        { code: 'LHD', name: '哪吒汽车 (合众新能源)' },
+        { code: 'LK6', name: '天际汽车 (ENOVATE)' },
+        { code: 'LZU', name: '高合汽车 (HiPhi)' },
+        { code: 'LW7', name: '岚图汽车 (VOYAH)' },
+        { code: 'LHG', name: '广汽昊铂 (Hyper)' },
+        { code: 'LX8', name: '集度汽车 (JiDU)' },
+        { code: 'L25', name: '小米汽车 (Xiaomi SU7)' },
+        { code: 'L7G', name: '小米汽车 (早期研发)' },
+        // 中国商用车/客车
+        { code: 'LZZ', name: '中国重型汽车集团有限公司 (中国重汽)' },
+        { code: 'LZK', name: '中国重汽 (卡车/专用车)' },
+        { code: 'LZV', name: '中国重汽 (特种车辆)' },
+        { code: 'LZG', name: '陕西汽车集团有限责任公司 (陕汽重卡)' },
+        { code: 'LGA', name: '东风商用车有限公司' },
+        { code: 'LG0', name: '东风商用车 (天龙/天锦系列)' },
+        { code: 'LGF', name: '东风客车' },
+        { code: 'LGG', name: '东风柳州汽车有限公司 (乘龙品牌)' },
+        { code: 'LC1', name: '一汽解放汽车有限公司' },
+        { code: 'LFN', name: '一汽解放 (J6/J7系列)' },
+        { code: 'LF4', name: '一汽解放 (新能源商用车)' },
+        { code: 'LTA', name: '上汽依维柯红岩商用车有限公司' },
+        { code: 'LKD', name: '哈飞汽车' },
+        { code: 'LFB', name: '江铃控股有限公司' },
+        { code: 'L8L', name: '厦门金龙联合汽车工业有限公司 (金龙客车)' },
+        { code: 'L3F', name: '厦门金龙旅行车有限公司 (金旅客车)' },
+        { code: 'LK6', name: '中通客车控股股份有限公司' },
+        { code: 'LUK', name: '宇通客车股份有限公司 (Yutong Bus)' },
+        { code: 'LKL', name: '宇通客车股份有限公司 (Yutong Bus)' },  // 新增
+        { code: 'LZ0', name: '苏州金龙 (海格客车)' },
+        { code: 'LC0', name: '南京依维柯汽车有限公司' },
+        { code: 'LN8', name: '江淮汽车集团股份有限公司 (江淮轻卡/思皓)' },
+        { code: 'LJ1', name: '江淮汽车 (乘用车/商务车)' },
+        { code: 'LW0', name: '华菱星马汽车 (汉马科技)' },
+        { code: 'LA9', name: '中国专用车/改装车/挂车 (产量小于500辆/年)' },
+        { code: 'LDK', name: '一汽客车大连客车厂' },
+        { code: 'LZM', name: '猛狮客车有限公司' },
+        { code: 'LMA', name: '梁山东岳挂车制造有限公司' },
+        { code: 'LZF', name: '重庆红岩汽车有限责任公司' },
+        { code: 'LC9', name: '潍坊宝利汽车有限公司/专用车' },
+        { code: 'L9G', name: '珠海市广通汽车有限公司' },
+        { code: 'LB9', name: '成都大运汽车集团有限公司' },
+        { code: 'LG6', name: '成都大运 (川路/大运/猎虎)' },
+        { code: 'LA0', name: '山东梁山通亚汽车制造有限公司' },
+        { code: 'LBB', name: '浙江钱江摩托股份有限公司' },
+        { code: 'LA8', name: '安徽安凯汽车集团有限公司' },
+        { code: 'L9W', name: '吉利远程商用车' },
+        // 德国
+        { code: 'WBA', name: '宝马 (BMW) 德国慕尼黑/丁戈尔芬工厂' },
+        { code: 'WBS', name: '宝马 (BMW) M部门/高性能车型' },
+        { code: 'WBX', name: '宝马 (BMW) X系列/德国工厂' },
+        { code: 'WBY', name: '宝马 (BMW) i系列电动车' },
+        { code: 'WDB', name: '梅赛德斯-奔驰 德国工厂 (燃油车)' },
+        { code: 'WDC', name: '梅赛德斯-奔驰 德国工厂 (新能源/EQ系列)' },
+        { code: 'W1N', name: '梅赛德斯-奔驰 (最新车型)' },
+        { code: 'W1K', name: '梅赛德斯-奔驰 (G级等高端车型)' },
+        { code: 'WVW', name: '大众汽车 (Volkswagen) 德国本土' },
+        { code: 'WV2', name: '大众商用车' },
+        { code: 'WAU', name: '奥迪 (Audi) 德国本土' },
+        { code: 'WUA', name: '奥迪 (Audi) 匈牙利/其他欧洲工厂' },
+        { code: 'WP0', name: '保时捷 (Porsche) 德国斯图加特/莱比锡工厂' },
+        { code: 'W0L', name: '欧宝 (Opel) 德国' },
+        { code: 'WMW', name: 'MINI (宝马集团 英国牛津工厂)' },
+        { code: 'WMA', name: 'MAN 曼恩商用车 (德国)' },
+        { code: 'WME', name: 'smart (梅赛德斯-奔驰 德国/法国)' },
+        // 日本
+        { code: 'JTE', name: '丰田 (Toyota) 日本本土 (乘用车/SUV)' },
+        { code: 'JTG', name: '丰田 (Toyota) 日本本土' },
+        { code: 'JTF', name: '丰田 (Toyota) 日本九州工厂' },
+        { code: 'JTH', name: '丰田 (Toyota) 高端车型/雷克萨斯工厂' },
+        { code: 'JTL', name: '丰田 (Toyota) 轻型车/商用车' },
+        { code: 'JHM', name: '本田 (Honda) 日本本土 (乘用车)' },
+        { code: 'JHL', name: '本田 (Honda) 日本工厂' },
+        { code: 'JHG', name: '本田 (Honda) 日本铃鹿/狭山工厂' },
+        { code: 'JN1', name: '日产 (Nissan) 日本本土 (乘用车)' },
+        { code: 'JN8', name: '日产 (Nissan) 日本工厂' },
+        { code: 'JNA', name: '日产 (Nissan) 高端车型/英菲尼迪工厂' },
+        { code: 'JM0', name: '马自达 (Mazda) 日本本土' },
+        { code: 'JM1', name: '马自达 (Mazda) 日本工厂' },
+        { code: 'JA', name: '五十铃 (Isuzu) / 铃木 (Suzuki) / 三菱 (Mitsubishi) 部分车型' },
+        { code: 'JSA', name: '铃木 (Suzuki) 日本本土' },
+        { code: 'JMB', name: '三菱 (Mitsubishi) 日本本土' },
+        { code: 'JMY', name: '三菱 (Mitsubishi) 日本工厂' },
+        // 美国
+        { code: '1G', name: '通用汽车 (General Motors) 美国工厂 (别克/雪佛兰/凯迪拉克等)' },
+        { code: '2G', name: '通用汽车 (加拿大工厂)' },
+        { code: '3G', name: '通用汽车 (墨西哥工厂)' },
+        { code: '1C', name: '克莱斯勒/道奇/Jeep 美国工厂' },
+        { code: '2C', name: '克莱斯勒/Jeep 加拿大工厂' },
+        { code: '3C', name: '克莱斯勒/Jeep 墨西哥工厂' },
+        { code: '1F', name: '福特汽车 (Ford) 美国工厂' },
+        { code: '2F', name: '福特汽车 (Ford) 加拿大工厂' },
+        { code: '3F', name: '福特汽车 (Ford) 墨西哥工厂' },
+        { code: '1N', name: '特斯拉 (Tesla) 美国弗里蒙特工厂' },
+        { code: '5YJ', name: '特斯拉 (Tesla) 美国工厂 (Model S/X)' },
+        { code: '5UX', name: '宝马 美国斯帕坦堡工厂 (X系列)' },
+        { code: '4US', name: '宝马 美国斯帕坦堡工厂' },
+        { code: '5UM', name: '宝马 美国工厂' },
+        { code: '1M', name: '梅赛德斯-奔驰 美国阿拉巴马工厂 (GLE/GLS等)' },
+        { code: '4JG', name: '梅赛德斯-奔驰 美国工厂 (SUV系列)' },
+        { code: '1YV', name: '马自达 美国/北美工厂' },
+        { code: '1HD', name: '哈雷戴维森摩托车 (Harley-Davidson)' },
+        // 英国
+        { code: 'SAJ', name: '捷豹 (Jaguar) 英国工厂' },
+        { code: 'SAL', name: '路虎 (Land Rover) 英国工厂' },
+        { code: 'SCB', name: '宾利 (Bentley) 英国克鲁工厂' },
+        { code: 'SCF', name: '阿斯顿·马丁 (Aston Martin) 英国工厂' },
+        { code: 'SHS', name: '劳斯莱斯 (Rolls-Royce) 英国古德伍德工厂' },
+        { code: 'SJN', name: '路虎 (英国索利赫尔工厂)' },
+        { code: 'SBM', name: '迈凯伦 (McLaren) 英国工厂' },
+        { code: 'SAD', name: 'MG汽车 (原英国/现已国产化)' },
+        // 韩国
+        { code: 'KMH', name: '现代汽车 (Hyundai) 韩国本土' },
+        { code: 'KMT', name: '现代汽车 (Hyundai) 韩国蔚山工厂' },
+        { code: 'KMU', name: '现代汽车 (Hyundai) 韩国牙山工厂' },
+        { code: 'KNA', name: '起亚汽车 (Kia) 韩国本土' },
+        { code: 'KNB', name: '起亚汽车 (Kia) 韩国光州工厂' },
+        { code: 'KNC', name: '起亚汽车 (Kia) 韩国华城工厂' },
+        { code: 'KMF', name: '双龙汽车 (SsangYong Motor)' },
+        { code: 'KPA', name: '双龙汽车 (现KG Mobility)' },
+        { code: 'YKP', name: '起亚汽车 (Kia) 中国合资车型' },
+        // 意大利
+        { code: 'ZFF', name: '法拉利 (Ferrari) 意大利马拉内罗工厂' },
+        { code: 'ZHW', name: '兰博基尼 (Lamborghini) 意大利圣亚加塔工厂' },
+        { code: 'ZAM', name: '玛莎拉蒂 (Maserati) 意大利摩德纳工厂' },
+        { code: 'ZAP', name: '帕加尼 (Pagani) 意大利工厂' },
+        { code: 'ZAR', name: '阿尔法·罗密欧 (Alfa Romeo) 意大利工厂' },
+        { code: 'ZDF', name: '菲亚特 (Fiat) 意大利工厂' },
+        { code: 'ZD0', name: '菲亚特 (Fiat) 都灵工厂' },
+        { code: 'ZFA', name: '菲亚特 (Fiat) 意大利工厂 (早期)' },
+        // 法国
+        { code: 'VF1', name: '雷诺 (Renault) 法国本土工厂' },
+        { code: 'VF3', name: '标致 (Peugeot) 法国索肖工厂' },
+        { code: 'VF7', name: '雪铁龙 (Citroën) 法国工厂' },
+        { code: 'VSS', name: '西雅特 (SEAT) 西班牙 (大众集团)' },
+        { code: 'VSK', name: '雷诺 西班牙/欧洲工厂' },
+        // 瑞典
+        { code: 'YV1', name: '沃尔沃 (Volvo) 瑞典哥德堡工厂' },
+        { code: 'YV4', name: '沃尔沃 (Volvo) 瑞典工厂 (XC系列)' },
+        { code: 'YSM', name: 'Polestar 极星 (瑞典研发/中国生产)' },
+        { code: 'YS2', name: '斯堪尼亚 (Scania) 瑞典商用车' },
+        // 其他欧洲
+        { code: 'TRU', name: '奥迪 (Audi) 匈牙利杰尔工厂' },
+        { code: 'TMB', name: '斯柯达 (Skoda) 捷克工厂 (大众集团)' },
+        { code: 'TMA', name: '斯柯达 (Skoda) 捷克姆拉达-博莱斯拉夫工厂' },
+        { code: 'TMT', name: '斯柯达 (Skoda) 捷克科瓦斯尼工厂' },
+        { code: 'TM9', name: '斯柯达 (Skoda) 中国合资 (与LFV共享)' },
+        { code: 'UU1', name: '达契亚 (Dacia) 罗马尼亚 (雷诺集团)' },
+        { code: 'U5Y', name: '达契亚 (Dacia) 欧洲工厂' },
+        { code: 'SW9', name: '柯尼塞格 (Koenigsegg) 瑞典 (年产<500)' },
+        // 其他亚洲
+        { code: 'MA1', name: '马恒达 (Mahindra) 印度' },
+        { code: 'MA3', name: '马恒达 (Mahindra) 印度' },
+        { code: 'MB1', name: '塔塔汽车 (Tata Motors) 印度' },
+        { code: 'MBJ', name: '塔塔汽车 (Tata) 商用车' },
+        { code: 'MHR', name: '本田 (Honda) 印度工厂' },
+        { code: 'MLH', name: '本田 (Honda) 泰国工厂' },
+        { code: 'MNB', name: '福特 (Ford) 泰国工厂' },
+        { code: 'MNK', name: '马自达 (Mazda) 泰国工厂' },
+        { code: 'MR0', name: '丰田 (Toyota) 泰国工厂' },
+        { code: 'PA1', name: '丰田 (Toyota) 菲律宾工厂' },
+        { code: 'PE1', name: '日产 (Nissan) 菲律宾工厂' }
+    ];
+
+    function lookupManufacturer(wmi) {
+        if (!wmi || wmi.length < 3) return null;
+        const upperWmi = wmi.toUpperCase();
+        let exact = manufacturerDB.find(item => item.code === upperWmi);
+        if (exact) return exact.name;
+        let prefix2 = upperWmi.substring(0, 2);
+        let prefixMatch = manufacturerDB.find(item => item.code === prefix2);
+        if (prefixMatch) return prefixMatch.name;
+        let prefix1 = upperWmi.charAt(0);
+        let firstMatch = manufacturerDB.find(item => item.code === prefix1);
+        if (firstMatch) return firstMatch.name;
+        return null;
+    }
+
+    function queryWMI(wmiCode) {
+        if (!wmiCode || wmiCode.trim().length === 0) {
+            return { country: '', manufacturer: '', isValid: false, message: '请输入3位WMI代码' };
+        }
+        let wmi = wmiCode.trim().toUpperCase();
+        if (wmi.length !== 3) {
+            return { country: '', manufacturer: '', isValid: false, message: 'WMI 代码必须是 3 位字符 (字母/数字组合)' };
+        }
+        let country = getDetailedCountry(wmi);
+        let manufacturer = lookupManufacturer(wmi);
+        if (!manufacturer) manufacturer = '未收录此制造商代码，可参考上方国家标识。';
+        return { country: country, manufacturer: manufacturer, isValid: true, message: '' };
+    }
+
+    const searchBtn = document.getElementById('searchBtn');
+    const wmiInput = document.getElementById('wmiCode');
+    const resultContent = document.getElementById('resultContent');
+
+    function displayResult(wmiInputValue) {
+        const cleanWmi = wmiInputValue.trim();
+        const result = queryWMI(cleanWmi);
+        if (!result.isValid) {
+            resultContent.innerHTML = `<div class="not-found">⚠️ ${result.message}</div>`;
+            return;
+        }
+        const displayWmi = cleanWmi.toUpperCase();
+        resultContent.innerHTML = `
+            <div class="result-content">
+                <div class="info-row">
+                    <span class="info-label">🔢 WMI 代码</span>
+                    <span class="info-value">${displayWmi}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🌍 生产国家/地区</span>
+                    <span class="info-value">${result.country}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🏭 制造商</span>
+                    <span class="info-value" style="font-size:0.95rem; font-family: system-ui;">${result.manufacturer}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📖 说明</span>
+                    <span class="info-value" style="font-size:0.8rem; font-weight: normal;">WMI 是世界制造厂识别代号，位于VIN码前3位</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function handleSearch() {
+        const val = wmiInput.value;
+        if (val.length === 0) {
+            resultContent.innerHTML = `<div class="not-found">🔍 请输入 WMI 代码（例：LSV / LFV / WBA）</div>`;
+            return;
+        }
+        displayResult(val);
+    }
+
+    searchBtn.addEventListener('click', handleSearch);
+    wmiInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+    });
+
+    resultContent.innerHTML = `<div style="text-align:center; opacity:0.7; padding:20px 0;">✨ 输入 WMI 代码，立刻查询生产商及产地 ✨<br><span style="font-size:0.7rem;">例：LSV → 上汽大众 | LKL → 宇通客车 | WBA → 宝马德国</span></div>`;
+</script>
+</body>
+</html>
